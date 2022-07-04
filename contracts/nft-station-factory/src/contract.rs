@@ -8,7 +8,7 @@ use crate::msg::{CountResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{State, STATE};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:nft-station-contract";
+const CONTRACT_NAME: &str = "crates.io:nft-station-factory";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -52,7 +52,6 @@ pub fn try_increment(deps: DepsMut) -> Result<Response, ContractError> {
 
     Ok(Response::new().add_attribute("method", "try_increment"))
 }
-
 pub fn try_reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
     STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
         if info.sender != state.owner {
