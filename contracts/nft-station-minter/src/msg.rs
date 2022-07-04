@@ -26,8 +26,20 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    Increment {},
-    Reset { count: i32 },
+    /// Mint a new NFT
+    Mint { token_id: u32 },
+    /// Mint a batch of new NFT
+    BatchMint { token_ids: Vec<u32> },
+    /// Mint a new NFT for recipient specified
+    MintTo { token_id: u32, recipient: String },
+    /// Transfer is a base message to move a token to another account without triggering actions
+    TransferNft { recipient: String, token_id: u32 },
+
+    /// Transfer is a base message to move a batch token to another account without triggering actions
+    BatchTransferNft {
+        recipient: String,
+        token_ids: Vec<u32>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

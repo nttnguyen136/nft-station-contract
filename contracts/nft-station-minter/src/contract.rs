@@ -2,7 +2,10 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Empty, SubMsg};
 
-use crate::state::{Config, CONFIG, MINTABLE_NUM_TOKENS, MINTABLE_TOKEN_IDS};
+use crate::{
+    msg::ExecuteMsg,
+    state::{Config, CONFIG, MINTABLE_NUM_TOKENS, MINTABLE_TOKEN_IDS},
+};
 use cosmwasm_std::{
     Binary, Deps, DepsMut, Env, MessageInfo, ReplyOn, Response, StdResult, WasmMsg,
 };
@@ -16,7 +19,6 @@ use crate::Extension;
 // CW721
 pub use cw721_base::{InstantiateMsg as CW721InstantiateMsg, MintMsg, MinterResponse, QueryMsg};
 pub type Cw721MetadataContract<'a> = cw721_base::Cw721Contract<'a, Extension, Empty>;
-pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension>;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:nft-station-minter";
@@ -82,8 +84,11 @@ pub fn instantiate(
         royalty_percentage: msg.royalty_percentage,
         royalty_payment_address: msg.royalty_payment_address,
     };
+
     CONFIG.save(deps.storage, &config)?;
+
     MINTABLE_NUM_TOKENS.save(deps.storage, &msg.num_tokens)?;
+
     let sub_msgs: Vec<SubMsg> = vec![SubMsg {
         id: INSTANTIATE_CW721_REPLY_ID,
         msg: WasmMsg::Instantiate {
@@ -124,7 +129,6 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     Ok(Response::new())
-    // Cw721MetadataContract::default().execute(deps, env, info, msg)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
