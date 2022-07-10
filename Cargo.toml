@@ -4,28 +4,14 @@ members = ["contracts/*"]
 [profile.release.package.nft-station-factory]
 codegen-units = 1
 incremental = false
-opt-level = 3
-debug = false
-# rpath = false
-# lto = true
-debug-assertions = false
-# codegen-units = 1
-# panic = 'abort'
-# incremental = false
-overflow-checks = true
 
 [profile.release.package.nft-station-minter]
 codegen-units = 1
 incremental = false
-opt-level = 3
-debug = false
-# rpath = false
-# lto = true
-debug-assertions = false
-# codegen-units = 1
-# panic = 'abort'
-# incremental = false
-overflow-checks = true
+
+[profile.release.package.nft-cw721]
+codegen-units = 1
+incremental = false
 
 
 [profile.release]
