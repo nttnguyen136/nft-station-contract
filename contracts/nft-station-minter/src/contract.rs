@@ -1,13 +1,13 @@
-use crate::{Deserialize, Serialize};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
+
 use cosmwasm_std::{
-    to_binary, Addr, Binary, CosmosMsg, Decimal, Deps, DepsMut, Empty, Env, MessageInfo, Order,
-    Reply, ReplyOn, Response, StdResult, SubMsg, Uint128, WasmMsg,
+    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Order, Reply,
+    ReplyOn, Response, StdResult, SubMsg, WasmMsg,
 };
 
 use crate::{
-    msg::{ConfigResponse, ExecuteMsg, QueryMsg, RoyaltiesInfoResponse},
+    msg::{ConfigResponse, ExecuteMsg, QueryMsg},
     state::{Config, CONFIG, CW721_ADDRESS, MINTABLE_NUM_TOKENS, MINTABLE_TOKEN_IDS},
 };
 use cw2::set_contract_version;
@@ -16,7 +16,7 @@ use url::Url;
 
 use crate::error::ContractError;
 use crate::msg::InstantiateMsg;
-use crate::{Extension, JsonSchema, Metadata};
+use crate::{Extension, Metadata};
 
 // CW721
 use cw721_base::{ExecuteMsg as Cw721ExecuteMsg, InstantiateMsg as CW721InstantiateMsg, MintMsg};
@@ -27,17 +27,9 @@ const CONTRACT_NAME: &str = "crates.io:nft-station-minter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // governance parameters
-pub(crate) const MAX_TOKEN_LIMIT: u32 = 10000;
-pub(crate) const MAX_TOKEN_PER_BATCH_LIMIT: u32 = 20;
+pub(crate) const MAX_TOKEN_LIMIT: u32 = 1000;
+pub(crate) const MAX_TOKEN_PER_BATCH: u32 = 20;
 pub(crate) const INSTANTIATE_CW721_REPLY_ID: u64 = 1;
-
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct TokensResponse {
-    /// Contains all token_ids in lexicographical ordering
-    /// If there are more than `limit`, use `start_from` in future queries
-    /// to achieve pagination.
-    pub tokens: Vec<String>,
-}
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -56,22 +48,10 @@ pub fn instantiate(
     }
 
     // Check the number of tokens per batch is more than zero and less than the max limit
-    if msg.max_tokens_per_batch_mint == 0
-        || msg.max_tokens_per_batch_mint > MAX_TOKEN_PER_BATCH_LIMIT
-    {
+    if msg.max_tokens_per_batch == 0 || msg.max_tokens_per_batch > MAX_TOKEN_PER_BATCH {
         return Err(ContractError::InvalidMaxTokensPerBatchMint {
             min: 1,
-            max: MAX_TOKEN_PER_BATCH_LIMIT,
-        });
-    }
-
-    // Check the number of tokens per batch is more than zero and less than the max limit
-    if msg.max_tokens_per_batch_transfer == 0
-        || msg.max_tokens_per_batch_transfer > MAX_TOKEN_PER_BATCH_LIMIT
-    {
-        return Err(ContractError::InvalidMaxTokensPerBatchTransfer {
-            min: 1,
-            max: MAX_TOKEN_PER_BATCH_LIMIT,
+            max: MAX_TOKEN_PER_BATCH,
         });
     }
 
@@ -89,10 +69,7 @@ pub fn instantiate(
         symbol: msg.symbol.clone(),
         base_token_uri: msg.base_token_uri.clone(),
         max_tokens: msg.num_tokens,
-        max_tokens_per_batch_mint: msg.max_tokens_per_batch_mint,
-        max_tokens_per_batch_transfer: msg.max_tokens_per_batch_transfer,
-        royalty_percentage: msg.royalty_percentage,
-        royalty_payment_address: msg.royalty_payment_address,
+        max_tokens_per_batch: msg.max_tokens_per_batch,
     };
 
     CONFIG.save(deps.storage, &config)?;
@@ -249,7 +226,7 @@ fn _execute_batch_mint(
     let mut minted_token_ids: Vec<u32> = vec![];
     let mut msgs: Vec<CosmosMsg<Empty>> = vec![];
     while let Some(token_id) = batch_token_ids.pop() {
-        if count >= config.max_tokens_per_batch_mint {
+        if count >= config.max_tokens_per_batch {
             break;
         }
 
@@ -349,7 +326,7 @@ fn _execute_batch_transfer_nft(
     let mut count: u32 = 0;
     let mut minted_token_ids: Vec<u32> = vec![];
     while let Some(token_id) = batch_token_ids.pop() {
-        if count >= config.max_tokens_per_batch_transfer {
+        if count >= config.max_tokens_per_batch {
             break;
         }
 
@@ -402,8 +379,6 @@ fn _create_cw721_mint<'a>(
             mintable_token_id.clone()
         )),
         extension: Some(Metadata {
-            royalty_percentage: config.royalty_percentage,
-            royalty_payment_address: config.royalty_payment_address.clone(),
             ..Metadata::default()
         }),
     });
@@ -415,31 +390,10 @@ fn _create_cw721_mint<'a>(
     Ok(msg)
 }
 
-pub fn query_royalties_info(deps: Deps, sale_price: Uint128) -> StdResult<RoyaltiesInfoResponse> {
-    let config = CONFIG.load(deps.storage)?;
-
-    let royalty_percentage = match config.royalty_percentage {
-        Some(ref percentage) => Decimal::percent(*percentage),
-        None => Decimal::percent(0),
-    };
-    let royalty_from_sale_price = sale_price * royalty_percentage;
-
-    let royalty_address = match config.royalty_payment_address {
-        Some(addr) => addr,
-        None => String::from(""),
-    };
-
-    Ok(RoyaltiesInfoResponse {
-        royalty_address,
-        royalty_amount: royalty_from_sale_price,
-    })
-}
-
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetConfig {} => to_binary(&query_config(deps)?),
-        QueryMsg::RoyaltyInfo { sale_price } => to_binary(&query_royalties_info(deps, sale_price)?),
         _ => Cw721MetadataContract::default().query(deps, env, msg.into()),
     }
 }
@@ -451,14 +405,12 @@ fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
         cw721_code_id: config.cw721_code_id,
         cw721_address: config.cw721_address,
         max_tokens: config.max_tokens,
-        max_tokens_per_mint: config.max_tokens_per_batch_mint,
-        max_tokens_per_batch_transfer: config.max_tokens_per_batch_transfer,
+        max_tokens_per_mint: config.max_tokens_per_batch,
+        max_tokens_per_batch_transfer: config.max_tokens_per_batch,
         name: config.name,
         symbol: config.symbol,
         base_token_uri: config.base_token_uri,
         extension: Some(Metadata {
-            royalty_percentage: config.royalty_percentage,
-            royalty_payment_address: config.royalty_payment_address,
             ..Metadata::default()
         }),
     })

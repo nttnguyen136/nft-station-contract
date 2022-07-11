@@ -1,7 +1,7 @@
-use cosmwasm_std::{Uint128, Addr};
+use cosmwasm_std::{Addr, Uint128};
+use cw721_base::msg::QueryMsg as CW721QueryMsg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use cw721_base::msg::QueryMsg as CW721QueryMsg;
 
 use crate::Extension;
 
@@ -12,19 +12,13 @@ pub struct InstantiateMsg {
     /// number token of NFTs
     pub num_tokens: u32,
     /// max number token of NFTs can be minted a batch
-    pub max_tokens_per_batch_mint: u32,
-    /// max number token of NFTs can be transferred a batch
-    pub max_tokens_per_batch_transfer: u32,
+    pub max_tokens_per_batch: u32,
     /// code id of cw721 was deploy before
     pub cw721_code_id: u64,
     /// name of NFTs
     pub name: String,
     /// symbol of NFTs
     pub symbol: String,
-    /// royalty percentage can be received
-    pub royalty_percentage: Option<u64>,
-    /// royalty addresses
-    pub royalty_payment_address: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -51,8 +45,6 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     /// Return config info set in Instantiate
     GetConfig {},
-    ///Return royalty info include Royalty address and the royalty fee must be pay.
-    RoyaltyInfo { sale_price: Uint128 },
     /// Return the owner of the given token, error if token does not exist
     /// Return type: OwnerOfResponse
     OwnerOf {
@@ -104,7 +96,6 @@ pub enum QueryMsg {
         limit: Option<u32>,
     },
 }
-
 
 impl From<QueryMsg> for CW721QueryMsg {
     fn from(msg: QueryMsg) -> CW721QueryMsg {
@@ -181,4 +172,12 @@ pub struct RoyaltiesInfoResponse {
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct CheckRoyaltiesResponse {
     pub royalty_payments: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+pub struct TokensResponse {
+    /// Contains all token_ids in lexicographical ordering
+    /// If there are more than `limit`, use `start_from` in future queries
+    /// to achieve pagination.
+    pub tokens: Vec<String>,
 }
