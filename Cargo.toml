@@ -1,9 +1,9 @@
 [workspace]
 members = ["contracts/*"]
 
-[profile.release.package.nft-station-factory]
-codegen-units = 1
-incremental = false
+# [profile.release.package.nft-station-factory]
+# codegen-units = 1
+# incremental = false
 
 [profile.release.package.nft-station-minter]
 codegen-units = 1
