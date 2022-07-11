@@ -1,5 +1,5 @@
 [workspace]
-members = ["contracts/*"]
+members = ["contracts/nft-station-minter", "contracts/nft-cw721"]
 
 # [profile.release.package.nft-station-factory]
 # codegen-units = 1

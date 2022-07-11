@@ -78,11 +78,21 @@ docker run --rm -v "$(pwd)":/code \
 ```
 
 Or, If you're on an arm64 machine, you should use a docker image built with arm64.
+
 ```sh
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
   cosmwasm/rust-optimizer-arm64:0.12.4
+```
+
+To compile all contracts in the workspace deterministically, you can run:
+
+```sh
+docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/workspace-optimizer:0.12.6
 ```
 
 We must mount the contract code to `/code`. You can use a absolute path instead
@@ -102,3 +112,30 @@ The wasm file is compiled deterministically (anyone else running the same
 docker on the same git commit should get the identical file with the same Sha256 hash).
 It is also stripped and minimized for upload to a blockchain (we will also
 gzip it in the uploading process to make it even smaller).
+
+## Deploying Contract To Aura Network
+
+### Setting Up Environment
+
+RPC="https://rpc.serenity.aura.network:443"
+CHAIN_ID=serenity-testnet-001
+NODE=(--node $RPC)
+TX_FLAG=($NODE --chain-id $CHAIN_ID --gas-prices 0.00025uaura --gas auto --gas-adjustment 1.3)
+
+### Use aurad to deploy contract
+
+```sh
+# set wasm link file
+CW721_WASM_FILE=.//nft-cw721.wasm
+# store contract
+RES=$(aurad tx wasm store $CW721_WASM_FILE --from wallet $TX_FLAG --output json)
+
+# get the code id
+CODE_ID=$(curl "$RPC/tx?hash=0x{txhash}" | jq -r ".result.tx_result.log"|jq -r ".[0].events[-1].attributes[0].value")
+
+
+# instantiate contract
+# INIT='{"name":"init-flower","amount":0,"price":0}'
+# aurad tx wasm instantiate $CODE_ID "$INIT" --from wallet --label "flower-contract" $TX_FLAG -y
+
+```

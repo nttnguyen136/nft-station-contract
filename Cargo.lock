@@ -246,18 +246,6 @@ dependencies = [
 
 [[package]]
 name = "cw2"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1d81d7c359d6c1fba3aa83dad7ec6f999e512571380ae62f81257c3db569743"
-dependencies = [
- "cosmwasm-std",
- "cw-storage-plus 0.11.1",
- "schemars",
- "serde",
-]
-
-[[package]]
-name = "cw2"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f8a6500c396e33f6a7b05d35a5124eb3e394cdb6ca901f7e88332870407896c"
@@ -574,20 +562,6 @@ dependencies = [
  "serde",
  "thiserror",
  "url",
-]
-
-[[package]]
-name = "nft-station-factory"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cosmwasm-storage",
- "cw-storage-plus 0.11.1",
- "cw2 0.11.1",
- "schemars",
- "serde",
- "thiserror",
 ]
 
 [[package]]
