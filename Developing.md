@@ -120,22 +120,44 @@ gzip it in the uploading process to make it even smaller).
 RPC="https://rpc.serenity.aura.network:443"
 CHAIN_ID=serenity-testnet-001
 NODE=(--node $RPC)
-TX_FLAG=($NODE --chain-id $CHAIN_ID --gas-prices 0.00025uaura --gas auto --gas-adjustment 1.3)
+TX_FLAG=($NODE --chain-id $CHAIN_ID --gas-prices 0.0025uaura --gas auto --gas-adjustment 1.3 --yes)
 
 ### Use aurad to deploy contract
 
 ```sh
 # set wasm link file
-CW721_WASM_FILE=.//nft-cw721.wasm
+CW721_WASM_FILE=("./artifacts/nft_cw721.wasm")
 # store contract
-RES=$(aurad tx wasm store $CW721_WASM_FILE --from wallet $TX_FLAG --output json)
+RES=$(aurad tx wasm store artifacts/cw721_base.wasm --from wallet $TX_FLAG --output json)
 
 # get the code id
 CODE_ID=$(curl "$RPC/tx?hash=0x{txhash}" | jq -r ".result.tx_result.log"|jq -r ".[0].events[-1].attributes[0].value")
 
+INIT='{"base_token_uri":"ipfs://Qme7VAFfCFFWrR2cwNk7huKrsHcU3DRew4K2t5uaZ84sVP", "cw721_code_id":180, "max_tokens_per_batch":10, "name":"NFT2", "num_tokens":100, "symbol":"2TFN"}'
 
 # instantiate contract
 # INIT='{"name":"init-flower","amount":0,"price":0}'
-# aurad tx wasm instantiate $CODE_ID "$INIT" --from wallet --label "flower-contract" $TX_FLAG -y
+aurad tx wasm instantiate 179 "$INIT" --from wallet --label "NFT2-2TFN" $TX_FLAG -y --no-admin
+
+# execute mint
+
+
+CONTRACT=aura15vmtunt27pxcm40vlcrlpzz9aylnauuz5y96fvx6z6ctcn5epgvqxxuh4k
+MINT='{"mint": {"token_id":3}}'
+
+MINT='{"mint_to": {"recipient":"aura1afuqcya9g59v0slx4e930gzytxvpx2c43xhvtx", "token_id":4}}'
+
+TRANSFER='{"transfer_nft": {"recipient":"aura1afuqcya9g59v0slx4e930gzytxvpx2c43xhvtx", "token_id":1}}'
+
+aurad tx wasm execute $CONTRACT "$MINT" --from wallet $TX_FLAG -y
+
+# And now access information from state:
+
+QUERY='{"get_config": {}}'
+QUERY='{"owner_of": {"token_id":"1"}}'
+QUERY='{"num_tokens": {}}'
+QUERY='{"tokens": {"owner":"aura1afuqcya9g59v0slx4e930gzytxvpx2c43xhvtx"}}'
+
+aurad query wasm contract-state smart $CONTRACT "$QUERY" $NODE --output json
 
 ```
