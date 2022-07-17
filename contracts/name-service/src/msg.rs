@@ -136,6 +136,10 @@ pub enum QueryMsg {
 
     // Return the minter
     Minter {},
+    /// Return if this is an executable contract or not
+    AddressOf {
+        token_id: String,
+    },
 }
 
 impl From<QueryMsg> for CW721QueryMsg {
@@ -198,7 +202,7 @@ impl From<QueryMsg> for CW721QueryMsg {
                 CW721QueryMsg::AllTokens { start_after, limit }
             }
             QueryMsg::Minter {} => CW721QueryMsg::Minter {},
-            // _ => panic!("cannot covert {:?} to CW721QueryMsg", msg),
+            _ => panic!("cannot covert {:?} to CW721QueryMsg", msg),
         }
     }
 }

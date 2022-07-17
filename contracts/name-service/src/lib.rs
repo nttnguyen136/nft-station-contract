@@ -1,6 +1,7 @@
 pub mod error;
 pub mod execute;
 pub mod msg;
+pub mod query;
 pub mod state;
 pub mod utils;
 
@@ -14,10 +15,11 @@ pub mod entry {
     use crate::error::ContractError;
     use crate::execute::{execute_instantiate, mint, update_metadata};
     use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+    use crate::query::address_of;
 
     use super::*;
 
-    use cosmwasm_std::entry_point;
+    use cosmwasm_std::{entry_point, to_binary};
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
     // This is a simple type to let us handle empty extensions
@@ -58,6 +60,7 @@ pub mod entry {
         let contract = Cw721MetadataContract::default(); // .query(deps, env, msg)
 
         match msg {
+            QueryMsg::AddressOf { token_id } => to_binary(&address_of(contract, deps, token_id)?),
             _ => contract.query(deps, env, msg.into()).map_err(|err| err),
         }
     }
