@@ -48,7 +48,7 @@ pub mod entry {
 
         match msg {
             ExecuteMsg::Mint(msg) => mint(contract, deps, env, info, msg),
-            ExecuteMsg::UpdateMetaData(msg) => update_metadata(contract, deps, env, info, msg),
+            ExecuteMsg::UpdateMetadata(msg) => update_metadata(contract, deps, env, info, msg),
             _ => contract
                 .execute(deps, env, info, msg.into())
                 .map_err(ContractError::Base),

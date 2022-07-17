@@ -256,7 +256,7 @@ pub enum ExecuteMsg {
         token_id: String,
     },
 
-    UpdateMetaData(UpdateMetadataMsg),
+    UpdateMetadata(UpdateMetadataMsg),
 }
 
 impl From<ExecuteMsg> for CW721ExecuteMsg<Extension> {

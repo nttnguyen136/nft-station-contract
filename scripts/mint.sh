@@ -16,7 +16,7 @@
 
 RPC="https://rpc.serenity.aura.network:443"
 CHAIN_ID=serenity-testnet-001
-TXFLAG="$NODE --chain-id $CHAIN_ID --node $RPC --gas-prices 0.0025uaura --gas auto --gas-adjustment 1.3 -y"
+TXFLAG="--chain-id $CHAIN_ID --node $RPC --gas-prices 0.0025uaura --gas auto --gas-adjustment 1.3 -y"
 
 MINT='{"mint":{
     "token_id":"name",
