@@ -1,15 +1,11 @@
 [workspace]
-members = ["contracts/nft-station-minter", "contracts/nft-cw721"]
+members = ["contracts/*"]
 
-# [profile.release.package.nft-station-factory]
-# codegen-units = 1
-# incremental = false
-
-[profile.release.package.nft-station-minter]
+[profile.release.package.name-service]
 codegen-units = 1
 incremental = false
 
-[profile.release.package.nft-cw721]
+[profile.release.package.nft-station-minter]
 codegen-units = 1
 incremental = false
 
